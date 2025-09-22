@@ -19,9 +19,14 @@ export default function ClaimWorkspacePage() {
   useEffect(() => {
     const fetchClaimData = async () => {
       try {
-        const response = await fetch(`/api/cms/claim/${params.id}`);
+        const response = await fetch(`/api/cms/claims/${params.id}`);
         const data = await response.json();
         setClaimData(data);
+
+        // Set decision amount if claim has existing amount
+        if (data.amount) {
+          setDecision(prev => ({ ...prev, amount: data.amount }));
+        }
       } catch (error) {
         console.error('Error fetching claim:', error);
       }
@@ -38,10 +43,15 @@ export default function ClaimWorkspacePage() {
     };
 
     try {
-      await fetch(`/api/cms/claim/${params.id}`, {
+      await fetch(`/api/cms/claims/${params.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ decision: updatedDecision })
+        body: JSON.stringify({
+          status: approvalType === 'approved' ? 'Approved' : 'Rejected',
+          decision: updatedDecision,
+          amount: decision.amount,
+          updatedBy: 'adjuster@company.com' // In real app, get from auth context
+        })
       });
       alert(`Claim ${approvalType}!`);
       router.push('/cms');

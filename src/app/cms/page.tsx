@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Clock, AlertTriangle, User, Filter, Brain, BarChart3, FileSpreadsheet } from 'lucide-react';
 import Link from 'next/link';
@@ -22,41 +22,71 @@ export default function CMSIntakePage() {
     type: 'all',
     slaRisk: 'all'
   });
+  const [claims, setClaims] = useState<ClaimRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<any>(null);
 
-  const mockClaims: ClaimRow[] = [
-    {
-      id: 'CLM-2025-000123',
-      type: 'Life',
-      channel: 'WhatsApp',
-      slaClock: '2 days',
-      slaStatus: 'Green',
-      redFlags: [],
-      assignee: 'John Doe',
-      createdAt: '2025-09-10'
-    },
-    {
-      id: 'CLM-2025-000124',
-      type: 'CI',
-      channel: 'Web',
-      slaClock: '4 days',
-      slaStatus: 'Amber',
-      redFlags: ['Early claim (<90 days)'],
-      assignee: 'Jane Smith',
-      createdAt: '2025-09-08'
-    },
-    {
-      id: 'CLM-2025-000125',
-      type: 'Accident',
-      channel: 'App',
-      slaClock: '6 days',
-      slaStatus: 'Red',
-      redFlags: ['High amount', 'Multiple claims'],
-      assignee: 'Unassigned',
-      createdAt: '2025-09-06'
+  useEffect(() => {
+    fetchClaims();
+    fetchStats();
+  }, [filter]);
+
+  const fetchClaims = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (filter.type !== 'all') params.append('claimType', filter.type);
+      if (filter.slaRisk !== 'all') params.append('slaStatus', filter.slaRisk);
+
+      const response = await fetch(`/api/cms/claims?${params}`);
+      const data = await response.json();
+
+      const formattedClaims = data.claims.map((claim: any) => ({
+        id: claim.id,
+        type: claim.claimType,
+        channel: claim.channel,
+        slaClock: calculateSLAClock(claim.slaDeadline),
+        slaStatus: claim.slaStatus,
+        redFlags: getRedFlags(claim),
+        assignee: claim.assignedTo || 'Unassigned',
+        createdAt: new Date(claim.submittedAt).toLocaleDateString()
+      }));
+
+      setClaims(formattedClaims);
+    } catch (error) {
+      console.error('Error fetching claims:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const filteredClaims = mockClaims.filter(claim => {
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('/api/cms/claims/stats');
+      const data = await response.json();
+      setStats(data);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const calculateSLAClock = (deadline: string) => {
+    const now = new Date();
+    const deadlineDate = new Date(deadline);
+    const diffTime = deadlineDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? `${diffDays} days` : 'Overdue';
+  };
+
+  const getRedFlags = (claim: any) => {
+    const flags = [];
+    if (claim.fraudScore && claim.fraudScore > 30) flags.push('High fraud risk');
+    if (claim.riskLevel === 'High') flags.push('High risk claim');
+    if (claim.slaStatus === 'Red') flags.push('SLA at risk');
+    return flags;
+  };
+
+  const filteredClaims = claims.filter(claim => {
     if (filter.type !== 'all' && claim.type !== filter.type) return false;
     if (filter.slaRisk !== 'all' && claim.slaStatus !== filter.slaRisk) return false;
     return true;
@@ -96,6 +126,30 @@ export default function CMSIntakePage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="text-sm text-gray-600">Total Claims</div>
+              <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
+              <div className="text-xs text-green-600">{stats.weeklyGrowth}</div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="text-sm text-gray-600">Pending Review</div>
+              <div className="text-2xl font-bold text-gray-900">{stats.pendingClaims}</div>
+              <div className="text-xs text-gray-500">Requires action</div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="text-sm text-gray-600">SLA Compliance</div>
+              <div className="text-2xl font-bold text-gray-900">{stats.slaCompliance}%</div>
+              <div className="text-xs text-gray-500">This month</div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="text-sm text-gray-600">Avg Processing</div>
+              <div className="text-2xl font-bold text-gray-900">{stats.averageProcessingTime}</div>
+              <div className="text-xs text-gray-500">Per claim</div>
+            </div>
+          </div>
+        )}
         <div className="bg-white rounded-lg shadow">
           <div className="border-b px-6 py-4">
             <div className="flex items-center justify-between">
@@ -156,7 +210,20 @@ export default function CMSIntakePage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredClaims.map((claim) => (
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center">
+                      <div className="text-gray-500">Loading claims...</div>
+                    </td>
+                  </tr>
+                ) : filteredClaims.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center">
+                      <div className="text-gray-500">No claims found</div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredClaims.map((claim) => (
                   <tr key={claim.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{claim.id}</div>
@@ -206,7 +273,7 @@ export default function CMSIntakePage() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                )))}
               </tbody>
             </table>
           </div>
