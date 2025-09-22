@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const mockClaim = {
-    claimId: params.id,
+    claimId: id,
     policy: { 
       status: 'Active', 
       product: 'Life',
@@ -38,12 +39,13 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const body = await request.json();
-  
+
   return NextResponse.json({
-    claimId: params.id,
+    claimId: id,
     ...body,
     updatedAt: new Date()
   });

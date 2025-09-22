@@ -24,3 +24,47 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Custom placeholder styles for better contrast - using black */
+input::placeholder,
+textarea::placeholder,
+select::placeholder {
+  color: black !important;
+  opacity: 0.7 !important;
+}
+
+/* Webkit browsers (Chrome, Safari, etc.) */
+input::-webkit-input-placeholder,
+textarea::-webkit-input-placeholder {
+  color: black !important;
+  opacity: 0.7 !important;
+}
+
+/* Firefox */
+input::-moz-placeholder,
+textarea::-moz-placeholder {
+  color: black !important;
+  opacity: 0.7 !important;
+}
+
+/* Internet Explorer */
+input:-ms-input-placeholder,
+textarea:-ms-input-placeholder {
+  color: black !important;
+  opacity: 0.7 !important;
+}
+
+/* Microsoft Edge */
+input::-ms-input-placeholder,
+textarea::-ms-input-placeholder {
+  color: black !important;
+  opacity: 0.7 !important;
+}
+
+/* Override Tailwind's default placeholder color */
+.placeholder\:text-gray-400::placeholder,
+.placeholder\:text-gray-500::placeholder,
+.placeholder\:text-gray-600::placeholder {
+  color: black !important;
+  opacity: 0.7 !important;
+}

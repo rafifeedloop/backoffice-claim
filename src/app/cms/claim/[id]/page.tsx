@@ -17,18 +17,18 @@ export default function ClaimWorkspacePage() {
   });
 
   useEffect(() => {
+    const fetchClaimData = async () => {
+      try {
+        const response = await fetch(`/api/cms/claim/${params.id}`);
+        const data = await response.json();
+        setClaimData(data);
+      } catch (error) {
+        console.error('Error fetching claim:', error);
+      }
+    };
+
     fetchClaimData();
   }, [params.id]);
-
-  const fetchClaimData = async () => {
-    try {
-      const response = await fetch(`/api/cms/claim/${params.id}`);
-      const data = await response.json();
-      setClaimData(data);
-    } catch (error) {
-      console.error('Error fetching claim:', error);
-    }
-  };
 
   const handleApproval = async (approvalType: string) => {
     const updatedDecision = {
@@ -241,8 +241,8 @@ export default function ClaimWorkspacePage() {
                       <input
                         type="number"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        value={decision.amount}
-                        onChange={(e) => setDecision({...decision, amount: parseFloat(e.target.value)})}
+                        value={decision.amount || ''}
+                        onChange={(e) => setDecision({...decision, amount: parseFloat(e.target.value) || 0})}
                         placeholder="Enter amount"
                       />
                     </div>

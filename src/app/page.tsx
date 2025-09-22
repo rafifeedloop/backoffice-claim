@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FileText, Search, Shield } from 'lucide-react';
+import { Search, Shield } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -12,10 +12,7 @@ export default function Home() {
               <span className="text-xl font-bold text-gray-900">ClaimCare</span>
             </div>
             <div className="flex space-x-4">
-              <Link href="/claim" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
-                Submit Claim
-              </Link>
-              <Link href="/status" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+              <Link href="/track-claim" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
                 Track Status
               </Link>
               <Link href="/cms" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
@@ -36,24 +33,9 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 mb-12">
-          <Link href="/claim" className="group">
-            <div className="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition-shadow">
-              <div className="flex items-center mb-4">
-                <FileText className="w-12 h-12 text-blue-600 group-hover:scale-110 transition-transform" />
-                <h2 className="text-2xl font-bold text-gray-900 ml-4">Submit New Claim</h2>
-              </div>
-              <p className="text-gray-600 mb-4">
-                Start your claim process with our easy-to-use submission form
-              </p>
-              <div className="text-blue-600 font-medium group-hover:underline">
-                Start Claim →
-              </div>
-            </div>
-          </Link>
-
-          <Link href="/status" className="group">
-            <div className="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition-shadow">
+        <div className="flex justify-center mb-12">
+          <Link href="/track-claim" className="group">
+            <div className="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition-shadow max-w-md">
               <div className="flex items-center mb-4">
                 <Search className="w-12 h-12 text-green-600 group-hover:scale-110 transition-transform" />
                 <h2 className="text-2xl font-bold text-gray-900 ml-4">Track Your Claim</h2>
