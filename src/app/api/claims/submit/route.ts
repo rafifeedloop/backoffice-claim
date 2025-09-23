@@ -1,66 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 interface ClaimSubmission {
+  claimType: string;
   policyNumber: string;
-  policyHolderName: string;
-  policyHolderNIK: string;
-  beneficiaryName: string;
   beneficiaryNIK: string;
-  beneficiaryRelation: string;
-  dateOfDeath: string;
-  causeOfDeath: string;
-  claimAmount: string;
-  bankAccount: string;
-  bankName: string;
-  email: string;
-  phone: string;
-  documents: {
-    deathCertificate: string;
-    identityCard: string;
-    policeReport?: string;
-    medicalRecord?: string;
-  };
-  submittedAt: string;
+  beneficiaryName: string;
+  incidentDate: string;
+  description: string;
+  contactPhone: string;
+  contactEmail: string;
+  documents: Array<{
+    type: string;
+    filename: string;
+    size: number;
+  }>;
 }
-
-const claimsDatabase = new Map<string, any>();
 
 export async function POST(request: NextRequest) {
   try {
-    const body: ClaimSubmission = await request.json();
+    const submission: ClaimSubmission = await request.json();
 
-    const claimId = `CLM-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`;
+    // Generate a unique claim ID
+    const claimId = `CLM-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
-    const newClaim = {
+    // Mock claim submission processing
+    const claimData = {
       claimId,
-      ...body,
       status: 'Submitted',
-      statusHistory: [
-        {
-          status: 'Submitted',
-          timestamp: new Date().toISOString(),
-          description: 'Claim submitted successfully'
-        }
+      submittedAt: new Date().toISOString(),
+      estimatedProcessingDays: 14,
+      nextSteps: [
+        'Document verification in progress',
+        'Initial assessment by claims adjuster',
+        'Medical review (if applicable)',
+        'Final decision and payout'
       ],
-      assignedTo: null,
-      estimatedProcessingDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      requiredDocuments: getRequiredDocuments(submission.claimType),
+      contactInfo: {
+        phone: '+62-21-1500-123',
+        email: 'claims@insurance.com',
+        hours: 'Mon-Fri 9AM-5PM WIB'
+      }
     };
-
-    claimsDatabase.set(claimId, newClaim);
 
     return NextResponse.json({
       success: true,
-      claimId,
       message: 'Claim submitted successfully',
-      estimatedProcessingDate: newClaim.estimatedProcessingDate
+      data: claimData
     });
+
   } catch (error) {
-    console.error('Error submitting claim:', error);
     return NextResponse.json(
-      {
-        success: false,
-        message: 'Failed to submit claim'
-      },
+      { error: 'Failed to submit claim' },
       { status: 500 }
     );
   }
@@ -69,80 +60,71 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const claimId = searchParams.get('claimId');
-  const email = searchParams.get('email');
 
-  if (claimId) {
-    const claim = claimsDatabase.get(claimId);
-
-    if (!claim) {
-      const mockClaim = {
-        claimId,
-        policyNumber: 'POL-2023-123456',
-        policyHolderName: 'John Doe',
-        beneficiaryName: 'Jane Doe',
-        status: 'Under Review',
-        submittedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        estimatedProcessingDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-        claimAmount: '100000000',
-        statusHistory: [
-          {
-            status: 'Submitted',
-            timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-            description: 'Claim submitted successfully'
-          },
-          {
-            status: 'Documents Verified',
-            timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-            description: 'All documents have been verified'
-          },
-          {
-            status: 'Under Review',
-            timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-            description: 'Claim is being reviewed by our team'
-          }
-        ],
-        documents: {
-          deathCertificate: { status: 'Verified', uploadedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
-          identityCard: { status: 'Verified', uploadedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
-          policeReport: { status: 'Pending Review', uploadedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() }
-        }
-      };
-
-      return NextResponse.json(mockClaim);
-    }
-
-    return NextResponse.json(claim);
-  }
-
-  if (email) {
-    const userClaims = Array.from(claimsDatabase.values()).filter(
-      claim => claim.email === email
+  if (!claimId) {
+    return NextResponse.json(
+      { error: 'Claim ID is required' },
+      { status: 400 }
     );
-
-    if (userClaims.length === 0) {
-      return NextResponse.json([
-        {
-          claimId: 'CLM-2024-000001',
-          policyNumber: 'POL-2023-123456',
-          status: 'Approved',
-          submittedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          claimAmount: '50000000'
-        },
-        {
-          claimId: 'CLM-2024-000002',
-          policyNumber: 'POL-2023-789012',
-          status: 'Processing',
-          submittedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-          claimAmount: '75000000'
-        }
-      ]);
-    }
-
-    return NextResponse.json(userClaims);
   }
 
-  return NextResponse.json(
-    { message: 'Please provide claimId or email parameter' },
-    { status: 400 }
-  );
+  // Mock claim status lookup
+  const mockClaimData = {
+    claimId,
+    policyNumber: 'POL-2024-001234',
+    policyHolderName: 'John Doe',
+    beneficiaryName: 'Jane Doe',
+    status: 'Under Review',
+    submittedAt: '2024-01-15T10:30:00Z',
+    estimatedProcessingDate: '2024-01-29T17:00:00Z',
+    claimAmount: 'Rp 150,000,000',
+    statusHistory: [
+      {
+        status: 'Submitted',
+        timestamp: '2024-01-15T10:30:00Z',
+        description: 'Claim submitted through online portal'
+      },
+      {
+        status: 'Documents Received',
+        timestamp: '2024-01-16T14:20:00Z',
+        description: 'All required documents received and verified'
+      },
+      {
+        status: 'Under Review',
+        timestamp: '2024-01-18T09:15:00Z',
+        description: 'Claim assigned to adjuster for detailed review'
+      }
+    ],
+    documents: {
+      'Death Certificate': {
+        status: 'Verified',
+        uploadedAt: '2024-01-15T10:35:00Z'
+      },
+      'Policy Document': {
+        status: 'Verified',
+        uploadedAt: '2024-01-15T10:36:00Z'
+      },
+      'Beneficiary ID': {
+        status: 'Verified',
+        uploadedAt: '2024-01-15T10:37:00Z'
+      }
+    }
+  };
+
+  return NextResponse.json(mockClaimData);
+}
+
+function getRequiredDocuments(claimType: string): string[] {
+  switch (claimType) {
+    case 'Life':
+      return ['Death Certificate', 'Policy Document', 'Beneficiary ID', 'Medical Records'];
+    case 'CI':
+      return ['Medical Diagnosis', 'Hospital Records', 'Doctor Statement', 'Lab Reports'];
+    case 'Accident':
+      return ['Police Report', 'Medical Report', 'Accident Photos', 'Witness Statements'];
+    case 'Health':
+      return ['Medical Bills', 'Doctor Prescription', 'Hospital Discharge', 'Medical Reports'];
+    default:
+      return ['Policy Document', 'Incident Report', 'Supporting Documents'];
+  }
 }
