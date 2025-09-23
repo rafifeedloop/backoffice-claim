@@ -368,7 +368,7 @@ export default function MetricsDashboard() {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Overturn Rate</p>
                 <p className="text-2xl font-bold text-gray-900">1.2%</p>
-                <p className="text-xs text-green-600">Within target (<3%)</p>
+                <p className="text-xs text-green-600">Within target (&lt;3%)</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600 mb-1">Customer Satisfaction</p>
