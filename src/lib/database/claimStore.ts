@@ -202,10 +202,10 @@ class ClaimStore {
         claims = claims.filter(c => c.channel === filters.channel);
       }
       if (filters.dateFrom) {
-        claims = claims.filter(c => new Date(c.submittedAt) >= new Date(filters.dateFrom));
+        claims = claims.filter(c => new Date(c.submittedAt) >= new Date(filters.dateFrom!));
       }
       if (filters.dateTo) {
-        claims = claims.filter(c => new Date(c.submittedAt) <= new Date(filters.dateTo));
+        claims = claims.filter(c => new Date(c.submittedAt) <= new Date(filters.dateTo!));
       }
     }
 

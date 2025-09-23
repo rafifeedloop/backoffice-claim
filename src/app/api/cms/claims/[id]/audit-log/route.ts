@@ -4,10 +4,11 @@ import claimStore from '@/lib/database/claimStore';
 // GET /api/cms/claims/[id]/audit-log - Get audit log for a claim
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const claim = claimStore.getClaimById(params.id);
+    const { id } = await params;
+    const claim = claimStore.getClaimById(id);
 
     if (!claim) {
       return NextResponse.json(

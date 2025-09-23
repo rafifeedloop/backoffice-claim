@@ -274,7 +274,7 @@ The approved benefit will be processed for payment within 24 hours to your regis
     letter += `
 REASON: ${decision.reason}
 
-${decision.comments || 'Please contact our customer service for more information.'}
+Please contact our customer service for more information.
 `;
   }
 

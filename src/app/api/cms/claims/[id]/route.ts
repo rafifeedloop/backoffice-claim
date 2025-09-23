@@ -4,10 +4,11 @@ import claimStore from '@/lib/database/claimStore';
 // GET /api/cms/claims/[id] - Get specific claim details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const claim = claimStore.getClaimById(params.id);
+    const { id } = await params;
+    const claim = claimStore.getClaimById(id);
 
     if (!claim) {
       return NextResponse.json(
@@ -28,13 +29,14 @@ export async function GET(
 // PUT /api/cms/claims/[id] - Update claim
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { updatedBy = 'system', ...updates } = body;
 
-    const updatedClaim = claimStore.updateClaim(params.id, updates, updatedBy);
+    const updatedClaim = claimStore.updateClaim(id, updates, updatedBy);
 
     if (!updatedClaim) {
       return NextResponse.json(
@@ -55,11 +57,12 @@ export async function PUT(
 // DELETE /api/cms/claims/[id] - Soft delete claim (change status to Closed)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const updatedClaim = claimStore.updateClaim(
-      params.id,
+      id,
       { status: 'Closed' },
       'system'
     );

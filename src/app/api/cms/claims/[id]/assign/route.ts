@@ -4,9 +4,10 @@ import claimStore from '@/lib/database/claimStore';
 // POST /api/cms/claims/[id]/assign - Assign claim to adjuster
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { assignedTo, assignedBy = 'system' } = body;
 
@@ -17,7 +18,7 @@ export async function POST(
       );
     }
 
-    const success = claimStore.assignClaim(params.id, assignedTo, assignedBy);
+    const success = claimStore.assignClaim(id, assignedTo, assignedBy);
 
     if (!success) {
       return NextResponse.json(
@@ -29,7 +30,7 @@ export async function POST(
     return NextResponse.json({
       message: 'Claim assigned successfully',
       assignedTo,
-      claimId: params.id
+      claimId: id
     });
   } catch (error) {
     return NextResponse.json(
@@ -42,10 +43,11 @@ export async function POST(
 // GET /api/cms/claims/[id]/assign - Get assignment history
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const claim = claimStore.getClaimById(params.id);
+    const { id } = await params;
+    const claim = claimStore.getClaimById(id);
 
     if (!claim) {
       return NextResponse.json(

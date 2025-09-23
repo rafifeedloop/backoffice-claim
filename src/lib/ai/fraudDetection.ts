@@ -34,19 +34,22 @@ export async function assessFraudRisk(claim: Claim): Promise<FraudRiskAssessment
       type: 'high_amount',
       description: 'Claim amount exceeds typical range',
       weight: 0.25,
-      detected: checkHighAmount(claim)
+      detected: checkHighAmount(claim),
+      confidence: 0.75
     },
     {
       type: 'multiple_claims',
       description: 'Multiple claims from same beneficiary',
       weight: 0.2,
-      detected: checkMultipleClaims(claim)
+      detected: checkMultipleClaims(claim),
+      confidence: 0.8
     },
     {
       type: 'document_mismatch',
       description: 'OCR detected document inconsistencies',
       weight: 0.35,
-      detected: checkDocumentMismatch(claim)
+      detected: checkDocumentMismatch(claim),
+      confidence: 0.9
     },
     {
       type: 'suspicious_pattern',
@@ -100,14 +103,15 @@ export async function assessFraudRisk(claim: Claim): Promise<FraudRiskAssessment
 }
 
 function checkEarlyClaim(claim: Claim): boolean {
-  const policyStartDate = new Date(claim.policy?.startDate || Date.now() - 180 * 24 * 60 * 60 * 1000);
+  // Default to 180 days ago if no policy start date available
+  const policyStartDate = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
   const claimDate = new Date(claim.createdAt);
   const daysSincePolicyStart = (claimDate.getTime() - policyStartDate.getTime()) / (1000 * 60 * 60 * 24);
   return daysSincePolicyStart < 90;
 }
 
 function checkHighAmount(claim: Claim): boolean {
-  const amount = claim.amount || 0;
+  const amount = claim.decision?.amount || 0;
   const avgAmount = 50000000; // Average claim amount
   return amount > avgAmount * 2;
 }

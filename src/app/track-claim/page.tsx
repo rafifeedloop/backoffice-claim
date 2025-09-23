@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Search, CheckCircle, Clock, AlertCircle, FileText, Calendar, DollarSign } from 'lucide-react';
 
@@ -26,7 +26,7 @@ interface ClaimStatus {
   };
 }
 
-export default function TrackClaimPage() {
+function TrackClaimContent() {
   const searchParams = useSearchParams();
   const [searchId, setSearchId] = useState(searchParams.get('id') || '');
   const [claimData, setClaimData] = useState<ClaimStatus | null>(null);
@@ -271,5 +271,13 @@ export default function TrackClaimPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function TrackClaimPage() {
+  return (
+    <Suspense fallback={<div className="p-8">Loading...</div>}>
+      <TrackClaimContent />
+    </Suspense>
   );
 }

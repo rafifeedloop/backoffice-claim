@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle, Clock, FileText, CreditCard, XCircle } from 'lucide-react';
 
@@ -12,7 +12,7 @@ interface TimelineItem {
   status: 'completed' | 'current' | 'pending';
 }
 
-export default function StatusPage() {
+function StatusContent() {
   const searchParams = useSearchParams();
   const [claimId, setClaimId] = useState('');
   const [claimData, setClaimData] = useState<any>(null);
@@ -176,5 +176,13 @@ export default function StatusPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function StatusPage() {
+  return (
+    <Suspense fallback={<div className="p-8">Loading...</div>}>
+      <StatusContent />
+    </Suspense>
   );
 }
